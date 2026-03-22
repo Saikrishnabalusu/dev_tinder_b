@@ -6,6 +6,7 @@ const { userAuth } = require("./middlewares/userAuth.js");
 
 const app = express();
 const { connectDB } = require("./config/database.js");
+const { User } = require("./models/userModel.js");
 
 
 connectDB().then(() => {
@@ -15,12 +16,31 @@ connectDB().then(() => {
 
 }).catch(e => console.error("database connection failed!"));
 
-app.use("/", userAuth);
+
+
+// app.use("/", userAuth);
 
 app.get("/dashboard", (req, res, next) => {
     // logic to provide the Dashboard access / authenticate the user 1st to protect this data access
     res.send("This is the dashboard screen");
 
+})
+
+app.post("/signUp", async (req, res, next) => {
+    const userObj = {
+        firstName: "balusu",
+        lastName: "sai",
+        gender: "Male",
+        email: "apbsk923@gmail.com",
+        age: 23
+    };
+    try {
+        const user = new User(userObj);
+        await user.save();
+        res.send("User created successfully, try Login now!!")
+    } catch {
+        res.status(500).send("User creation failed!!")
+    }
 })
 
 app.use("/", (err, req, res, next) => {
