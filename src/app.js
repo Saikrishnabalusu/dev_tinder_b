@@ -2,15 +2,18 @@
 
 const express = require("express")
 const bcrypt = require("bcrypt")
+const jwt = require("jsonwebtoken")
+const cookieParser = require("cookie-parser")
 const { userAuth } = require("./middlewares/userAuth.js");
 const { validateLoginData } = require("./utils/validateLoginData.js")
 const { validateSignupData } = require("./utils/validateSignupData.js")
-
-
-const app = express();
 const { connectDB } = require("./config/database.js");
 const { User } = require("./models/userModel.js");
 
+const app = express();
+
+app.use(express.json())
+app.use(cookieParser())
 
 connectDB().then(() => {
     console.log("Database connection established..."); app.listen(7777, () => {
@@ -19,15 +22,7 @@ connectDB().then(() => {
 
 }).catch(e => console.error("database connection failed!"));
 
-app.use(express.json())
 
-// app.use("/", userAuth);
-
-app.get("/dashboard", (req, res, next) => {
-    // logic to provide the Dashboard access / authenticate the user 1st to protect this data access
-    res.send("This is the dashboard screen");
-
-})
 
 app.post("/signUp", async (req, res) => { // user SignUp API
 
@@ -38,13 +33,25 @@ app.post("/signUp", async (req, res) => { // user SignUp API
         validateSignupData(req);
         // hash the password
         const hashedPassword = await bcrypt.hash(req.body.password, 10)
-        console.log("hashed password:", hashedPassword);
+        // console.log("hashed password:", hashedPassword);
 
         const user = new User({ ...userObj, password: hashedPassword });
         await user.save();
         res.send("User created successfully, try Login now!!")
+    } catch (error) {
+        res.status(500).send("User creation failed!!" + error.message)
+    }
+})
+
+
+
+app.get("/profile", userAuth, (req, res, next) => {
+    try {
+        res.send("Login user profile is :" + req.loginUser.firstName + "  " + req.loginUser.lastName)
+
+
     } catch (e) {
-        res.status(500).send("User creation failed!!" + e)
+        res.status(400).send("Error in getting Profile :" + e);
     }
 })
 
@@ -66,7 +73,7 @@ app.post("/signUp", async (req, res) => { // user SignUp API
 //     // res.send(loginUser)
 // })
 
-app.get("/login", async (req, res) => {
+app.post("/login", async (req, res) => {
     try {
         // validate req.body
         validateLoginData(req);
@@ -74,9 +81,23 @@ app.get("/login", async (req, res) => {
         //check if email exists in DB
         const userDetail = await User.find({ email: email });
 
+        if (!userDetail) {
+            throw new Error("Invalid credentials")
+        }
+        //check the password match
+        isPasswordValid = await bcrypt.compare(password, userDetail[0].password)
+        if (!isPasswordValid) {
+            throw new Error("Invalid Credentials")
+        }
+        //Provide the Token 
+        const token = await jwt.sign({ _id: userDetail[0]._id }, "JWT_SECRET")
+
+        res.cookie("token", token)
+
+        res.send("Login Successful...")
     }
-    catch {
-        res.status(400).send("Something went wrong during login")
+    catch (error) {
+        res.status(400).send("Something went wrong during login" + error.message)
     }
 
 })
