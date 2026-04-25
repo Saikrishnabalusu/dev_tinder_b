@@ -14,7 +14,7 @@ connectionRoute.post("/connection/:status/:toUserId", userAuth, async (req, res)
         const toUser = await User.findById(toUserId);
 
         const allowedStatus = ["interested", "ignored"]
-        if (!allowedStatus.includes(status.trim().toLocaleLowerCase())) {
+        if (!allowedStatus.includes(status.trim().toLowerCase())) {
             throw new Error("Invalid requested status")
         }
 
@@ -22,12 +22,32 @@ connectionRoute.post("/connection/:status/:toUserId", userAuth, async (req, res)
         if (!toUser) {
             throw new Error("The requested user not found in the DB")
         }
-
+        //handle status = interested
         const existingConnection = await connectionModel.find(
+
             { $or: [{ fromUserId: loginUser._id, toUserId }, { fromUserId: toUserId, toUserId: loginUser._id }] });
-        // if(existingConnection.status ==="ignored"){
-        //     throw new Error("Status ")
-        // }
+
+        // handle if there is no existing connection
+        if (!existingConnection) {
+            const newConnection = {
+                fromUserId: loginUser,
+                toUserId,
+                status
+            }
+            await connectionModel.save(newConnection)
+            res.json({
+                "status": "success",
+                "message": "Request sent successfully!!"
+            })
+        }
+
+
+        if (existingConnection[0].status === "rejected") {
+            throw new Error("Failed to send the request or the requested user isn't interested!!  ")
+        }
+        else if (existingConnection[0].status === "interested") {
+            await connectionModel.save({ ...existingConnection, status: "accepted" });
+        }
         // check if either of them exists in connections collection both from & to 
 
         // if none exists register the document in db

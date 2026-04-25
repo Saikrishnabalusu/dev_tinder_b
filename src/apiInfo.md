@@ -12,8 +12,8 @@
 7. PATCH profile/editPassword
 ## Connection Request Router
 
-9. POST Request/:send/:userId
-10. POST Request/:ignore/:userId
+9. POST connection/:send/:userId
+10. POST connection/:ignore/:userId
 
 11. POST Request/:accepted/:userId
 12. POST request/:rejected/:userId
