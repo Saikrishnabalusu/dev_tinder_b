@@ -36,7 +36,7 @@ authRouter.post("/login", async (req, res) => {
             throw new Error("Invalid credentials")
         }
         //check the password match
-        isPasswordValid = user.comparePassword(req);
+        isPasswordValid = await user.comparePassword(req);
         if (!isPasswordValid) {
             throw new Error("Invalid Credentials")
         }
@@ -45,10 +45,13 @@ authRouter.post("/login", async (req, res) => {
 
         res.cookie("token", token)
 
-        res.send("Login Successful...")
+        res.json({
+            "message": "success",
+            "data": user
+        })
     }
     catch (error) {
-        res.status(400).send("Something went wrong during login" + error.message)
+        res.status(400).send("Something went wrong during login: " + error.message)
     }
 
 })

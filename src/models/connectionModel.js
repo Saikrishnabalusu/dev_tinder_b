@@ -1,8 +1,10 @@
 const mongoose = require("mongoose");
+const { User } = require("./userModel");
 
 const connectionSchema = mongoose.Schema({
     fromUserId: {
         type: mongoose.Types.ObjectId,
+        ref: User,
         required: true,
 
     },
