@@ -18,7 +18,13 @@ authRouter.post("/signUp", async (req, res) => { // user SignUp API
 
         const user = new User({ ...userObj, password: hashedPassword });
         await user.save();
-        res.send("User created successfully, try Login now!!")
+        await user.getJWT().then((token) => {
+            res.cookie("token", token)
+        });
+        res.json({
+            message: "User created successfully",
+            data: user
+        });
     } catch (error) {
         res.status(500).send("User creation failed!!" + error.message)
     }

@@ -9,7 +9,7 @@ const bcrypt = require("bcrypt");
 
 profileRouter.get("/profile", userAuth, (req, res, next) => {
     try {
-        res.json(req.loginUser);
+        res.json({ message: "Profile fetched successfully", data: req.loginUser });
 
 
     } catch (error) {
@@ -17,7 +17,7 @@ profileRouter.get("/profile", userAuth, (req, res, next) => {
     }
 })
 
-profileRouter.patch("/profile", userAuth, async (req, res) => {
+profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
     try {
         const { loginUser } = req;
         //sanitize the req.body data
@@ -31,7 +31,7 @@ profileRouter.patch("/profile", userAuth, async (req, res) => {
             "updatedUser": loginUser
         })
     } catch (err) {
-        res.status(400).send("User Updation Failed!!" + "  " + err)
+        res.status(400).json({ message: "User Updation Failed!!", error: err.message });
     }
 
 })
