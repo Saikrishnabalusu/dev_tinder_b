@@ -6,7 +6,7 @@ const profileRouter = require("./routes/profileRoute.js")
 const { connectionRoute } = require("./routes/connectionRoute.js")
 const cors = require("cors")
 
-
+require('dotenv').config()
 const app = express();
 app.use(express.json()) // to parse the incoming request body in json format and make it available in req.body
 app.use(cookieParser()) // to parse the incoming request cookies and make it available in req.cookies
@@ -22,8 +22,8 @@ app.use("/", connectionRoute);
 
 connectDB().then(() => {
     console.log("Database connection established...");
-    app.listen(7777, () => {
-        console.log("app listening successfully on port 7777...");
+    app.listen(process.env.PORT, () => {
+        console.log(`app listening successfully on port ${process.env.PORT}...`);
     })
 
 }).catch(e => console.error("database connection failed! with error: " + e.message));
