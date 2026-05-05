@@ -29,12 +29,14 @@ connectionRoute.post("/connection/:status/:toUserId", userAuth, async (req, res)
 
         // handle if there is no existing connection
         if (!existingConnection) {
-            const newConnection = {
+            const newConnection = new ConnectionModel({
                 fromUserId: loginUser,
                 toUserId,
                 status
-            }
-            await ConnectionModel.save(newConnection)
+            })
+
+
+            await newConnection.save()
             res.json({
                 "status": "success",
                 "message": "Request sent successfully!!"
@@ -46,7 +48,8 @@ connectionRoute.post("/connection/:status/:toUserId", userAuth, async (req, res)
             throw new Error("Failed to send the request or the requested user isn't interested!!  ")
         }
         else if (existingConnection[0]?.status === "interested") {
-            await ConnectionModel.save({ ...existingConnection, status: "accepted" });
+            existingConnection[0].status = "accepted";
+            await existingConnection[0].save();
         }
         // check if either of them exists in connections collection both from & to 
 
