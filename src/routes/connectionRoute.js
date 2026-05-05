@@ -23,7 +23,7 @@ connectionRoute.post("/connection/:status/:toUserId", userAuth, async (req, res)
             throw new Error("The requested user not found in the DB")
         }
         //handle status = interested
-        const existingConnection = await connectionModel.find(
+        const existingConnection = await ConnectionModel.find(
 
             { $or: [{ fromUserId: loginUser._id, toUserId }, { fromUserId: toUserId, toUserId: loginUser._id }] });
 
@@ -34,7 +34,7 @@ connectionRoute.post("/connection/:status/:toUserId", userAuth, async (req, res)
                 toUserId,
                 status
             }
-            await connectionModel.save(newConnection)
+            await ConnectionModel.save(newConnection)
             res.json({
                 "status": "success",
                 "message": "Request sent successfully!!"
@@ -42,11 +42,11 @@ connectionRoute.post("/connection/:status/:toUserId", userAuth, async (req, res)
         }
 
 
-        if (existingConnection[0].status === "rejected") {
+        if (existingConnection[0]?.status === "rejected") {
             throw new Error("Failed to send the request or the requested user isn't interested!!  ")
         }
-        else if (existingConnection[0].status === "interested") {
-            await connectionModel.save({ ...existingConnection, status: "accepted" });
+        else if (existingConnection[0]?.status === "interested") {
+            await ConnectionModel.save({ ...existingConnection, status: "accepted" });
         }
         // check if either of them exists in connections collection both from & to 
 
@@ -64,6 +64,24 @@ connectionRoute.post("/connection/:status/:toUserId", userAuth, async (req, res)
         res.status(400).send("Something went wrong while posting connection, " + err)
     }
 
+})
+
+
+connectionRoute.get("/connections", userAuth, async (req, res) => {
+    try {
+        // find all the connections with status interested
+        const loginUser = req.loginUser;
+        const connections = await ConnectionModel.find({ $or: [{ fromUserId: loginUser._id }, { toUserId: loginUser._id }], status: "accepted" }).populate({
+            path: "fromUserId toUserId",
+            select: "firstName lastName"
+        })
+        res.json({
+            message: "users Fetched successfully",
+            data: connections
+        })
+    } catch (error) {
+        res.status(500).send("something went wrong in Connections Route -" + error.message)
+    }
 })
 
 module.exports = { connectionRoute }

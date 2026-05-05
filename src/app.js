@@ -4,6 +4,8 @@ const { connectDB } = require("./config/database.js");
 const authRouter = require("./routes/authRoute.js")
 const profileRouter = require("./routes/profileRoute.js")
 const { connectionRoute } = require("./routes/connectionRoute.js")
+const { requestRoute } = require("./routes/requestRoute.js")
+const { feedRouter } = require("./routes/feedroute.js")
 const cors = require("cors")
 
 require('dotenv').config()
@@ -16,9 +18,11 @@ const corsOptions = {
 };
 app.use(cors(corsOptions)) // to allow cross-origin requests from the frontend to the backend
 
+app.use("/", feedRouter)
 app.use("/", authRouter);
 app.use("/", profileRouter);
 app.use("/", connectionRoute);
+app.use("/", requestRoute)
 
 connectDB().then(() => {
     console.log("Database connection established...");
