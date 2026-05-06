@@ -28,40 +28,52 @@ connectionRoute.post("/connection/:status/:toUserId", userAuth, async (req, res)
             { $or: [{ fromUserId: loginUser._id, toUserId }, { fromUserId: toUserId, toUserId: loginUser._id }] });
 
         // handle if there is no existing connection
-        if (!existingConnection) {
+        if (existingConnection.length === 0) {
+            // console.log("no existing connection");
             const newConnection = new ConnectionModel({
-                fromUserId: loginUser,
+                fromUserId: loginUser._id,
                 toUserId,
                 status
             })
 
 
             await newConnection.save()
-            res.json({
+            return res.json({
                 "status": "success",
                 "message": "Request sent successfully!!"
             })
         }
-
+        // console.log("existingConnections...", existingConnection)
 
         if (existingConnection[0]?.status === "rejected") {
             throw new Error("Failed to send the request or the requested user isn't interested!!  ")
         }
-        else if (existingConnection[0]?.status === "interested") {
+        else if (existingConnection[0]?.status === "interested" && status === "interested") {
             existingConnection[0].status = "accepted";
             await existingConnection[0].save();
+            return res.json({
+                status: "success",
+                message: "Connection accepted"
+            })
+        }
+        else if (existingConnection[0].status === "ignored") {
+            existingConnection[0].status = status;
+            await existingConnection[0].save()
+            return res.json({
+                status: "success",
+                message: "Connection updated"
+            })
         }
         // check if either of them exists in connections collection both from & to 
 
         // if none exists register the document in db
 
 
+        return res.json({
+            status: "info",
+            message: "No action needed"
+        });
 
-        const document = new ConnectionModel({ fromUserId: loginUser._id, toUserId, status })
-
-        await document.save();
-
-        res.send(`Connection Request sent : ${status}`)
 
     } catch (err) {
         res.status(400).send("Something went wrong while posting connection, " + err)

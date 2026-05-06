@@ -1,16 +1,21 @@
 const express = require('express');
 const { userAuth } = require('../middlewares/userAuth');
 const { User } = require('../models/userModel');
+const { ConnectionModel } = require('../models/connectionModel');
 const feedRouter = express.Router();
 
 feedRouter.get("/feed", userAuth, async (req, res) => {
     try {
         const loginUser = req.loginUser;
         //list all the users who are not his connections
-        const allUsers = await User.find({ _id: { $ne: loginUser._id } }).select("-password -email")
+        const connections = await ConnectionModel.find({ $or: [{ fromUserId: loginUser._id, status: "accepted" }, { toUserId: loginUser._id, status: "accepted" }] });
+        const connectionIds = connections.map((connection) => {
+            return (connection.fromUserId.equals(loginUser._id) ? connection.toUserId : connection.fromUserId)
+        })
+        const feedUsers = await User.find({ _id: { $nin: [...connectionIds, loginUser._id] } }).select("-password -email")
         res.json({
             message: "successfully fetched all users",
-            data: allUsers
+            data: feedUsers
         })
     } catch (error) {
         res.status(500).send("something went wrong while fetching feed data -" + error.message)
