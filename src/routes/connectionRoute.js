@@ -86,13 +86,18 @@ connectionRoute.get("/connections", userAuth, async (req, res) => {
     try {
         // find all the connections with status interested
         const loginUser = req.loginUser;
-        const connections = await ConnectionModel.find({ $or: [{ fromUserId: loginUser._id }, { toUserId: loginUser._id }], status: "accepted" }).populate({
-            path: "fromUserId toUserId",
-            select: "firstName lastName"
-        })
+        const connections = await ConnectionModel.find({ $or: [{ fromUserId: loginUser._id }, { toUserId: loginUser._id }], status: "accepted" })
+
+        const connections_ids = connections.map(connection => {
+            const { fromUserId, toUserId } = connection;
+            return fromUserId._id.toString() === loginUser._id.toString() ? toUserId : fromUserId;
+        });
+
+        const userConnections = await User.find({ _id: { $in: connections_ids } }).select("firstName lastName profileUrl age gender skills")
+
         res.json({
             message: "users Fetched successfully",
-            data: connections
+            data: userConnections
         })
     } catch (error) {
         res.status(500).send("something went wrong in Connections Route -" + error.message)
