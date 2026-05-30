@@ -34,7 +34,7 @@ requestRoute.post("/review/:status/:toUserId", userAuth, async (req, res) => {
 requestRoute.get("/pendingRequests", userAuth, async (req, res) => {
     try {
         const loginUser = req.loginUser;
-        const pendingRequests = await ConnectionModel.find({ $or: [{ fromUserId: loginUser._id }, { toUserId: loginUser._id }], status: "interested" })
+        const pendingRequests = await ConnectionModel.find({ toUserId: loginUser._id, status: "interested" });
         // console.log("pendingRequests...", pendingRequests)
         const pendingRequestsUserIds = pendingRequests.map(request => {
             if (request.fromUserId.toString() === loginUser._id.toString()) {

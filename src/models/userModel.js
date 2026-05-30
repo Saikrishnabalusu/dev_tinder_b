@@ -50,7 +50,6 @@ userSchema.methods.getJWT = async function () {
 userSchema.methods.comparePassword = async function (req) {
     const receivedPassword = req.body.password;
     const isPasswordMatched = await bcrypt.compare(receivedPassword, this.password);
-    console.log(isPasswordMatched + "passwordValidation")
     return isPasswordMatched;
 }
 
