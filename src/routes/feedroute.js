@@ -12,7 +12,11 @@ feedRouter.get("/feed", userAuth, async (req, res) => {
         const connectionIds = connections.map((connection) => {
             return (connection.fromUserId.equals(loginUser._id) ? connection.toUserId : connection.fromUserId)
         })
-        const feedUsers = await User.find({ _id: { $nin: [...connectionIds, loginUser._id] } }).select("-password -email")
+        // console.log("connectionIds", connectionIds);
+        const intersetedConnections = await ConnectionModel.find({ fromUserId: loginUser._id, status: "interested" }).select("toUserId -_id")
+        const intersetedUserIds = intersetedConnections.map((connection) => connection.toUserId)
+        // console.log("intersetedUserIds", intersetedUserIds);
+        const feedUsers = await User.find({ _id: { $nin: [...connectionIds, ...intersetedUserIds, loginUser._id] } }).select("-password -email")
         res.json({
             message: "successfully fetched all users",
             data: feedUsers
