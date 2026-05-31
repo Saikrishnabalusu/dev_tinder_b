@@ -27,7 +27,7 @@ connectionRoute.post("/connection/:status/:toUserId", userAuth, async (req, res)
 
             { $or: [{ fromUserId: loginUser._id, toUserId }, { fromUserId: toUserId, toUserId: loginUser._id }] });
 
-        // handle if there is no existing connection
+        // handle if there is no existing connection positive case
         if (existingConnection.length === 0) {
             // console.log("no existing connection");
             const newConnection = new ConnectionModel({
@@ -43,12 +43,17 @@ connectionRoute.post("/connection/:status/:toUserId", userAuth, async (req, res)
                 "message": "Request sent successfully!!"
             })
         }
-        // console.log("existingConnections...", existingConnection)
 
+        // Handling the case when there is already a connection exists between the users
         if (existingConnection[0]?.status === "rejected") {
             throw new Error("Failed to send the request or the requested user isn't interested!!  ")
         }
         else if (existingConnection[0]?.status === "interested" && status === "interested") {
+            // BUG here same user sending interested would eventually connected even if other user haven't accepted connection
+            const { fromUserId } = existingConnection[0];
+            if (fromUserId.toString() === loginUser._id.toString()) {
+                throw new Error("You have already sent an interest request to this user.");
+            }
             existingConnection[0].status = "accepted";
             await existingConnection[0].save();
             return res.json({

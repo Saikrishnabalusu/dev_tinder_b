@@ -7,9 +7,14 @@ const { connectionRoute } = require("./routes/connectionRoute.js")
 const { requestRoute } = require("./routes/requestRoute.js")
 const { feedRouter } = require("./routes/feedroute.js")
 const cors = require("cors")
+const http = require("http");
+const { initializeSocket } = require("./utils/socket.js");
+const { chatRoute } = require("./routes/chatRoute.js");
+
 
 require('dotenv').config()
 const app = express();
+const server = http.createServer(app)
 app.use(express.json()) // to parse the incoming request body in json format and make it available in req.body
 app.use(cookieParser()) // to parse the incoming request cookies and make it available in req.cookies
 const corsOptions = {
@@ -22,11 +27,13 @@ app.use("/", feedRouter)
 app.use("/", authRouter);
 app.use("/", profileRouter);
 app.use("/", connectionRoute);
-app.use("/", requestRoute)
+app.use("/", requestRoute);
+app.use("/", chatRoute);
 
+initializeSocket(server) // to initialize the socket connection for real-time communication between the server and the clients
 connectDB().then(() => {
     console.log("Database connection established...");
-    app.listen(process.env.PORT, () => {
+    server.listen(process.env.PORT, () => {
         console.log(`app listening successfully on port ${process.env.PORT}...`);
     })
 
