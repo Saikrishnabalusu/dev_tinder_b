@@ -9,6 +9,7 @@ const { feedRouter } = require("./routes/feedroute.js")
 const cors = require("cors")
 const http = require("http");
 const { initializeSocket } = require("./utils/socket.js");
+const { chatRoute } = require("./routes/chatRoute.js");
 
 
 require('dotenv').config()
@@ -26,7 +27,9 @@ app.use("/", feedRouter)
 app.use("/", authRouter);
 app.use("/", profileRouter);
 app.use("/", connectionRoute);
-app.use("/", requestRoute)
+app.use("/", requestRoute);
+app.use("/", chatRoute);
+
 initializeSocket(server) // to initialize the socket connection for real-time communication between the server and the clients
 connectDB().then(() => {
     console.log("Database connection established...");
