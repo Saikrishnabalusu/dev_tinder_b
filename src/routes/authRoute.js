@@ -4,19 +4,29 @@ const bcrypt = require("bcrypt")
 const { validateLoginData } = require("../utils/validateLoginData.js")
 const { validateSignupData } = require("../utils/validateSignupData.js")
 const { User } = require("../models/userModel.js");
+const multer = require('multer')
+const { uploadOnCloudinary } = require("../utils/cloudinary.js");
+// const upload = multer({ dest: './files' })
+const { upload } = require("../middlewares/handleFile.middleware.js");
 
-authRouter.post("/signUp", async (req, res) => { // user SignUp API
+authRouter.post("/signUp", upload.single("profileImage"), async (req, res) => { // user SignUp API
 
     const userObj = req.body;
+    const userImage = req.file; // multer will add the file to the request object
+    // console.log("received File :", req.file);
 
     try {
+        debugger
         //validate signup data
         validateSignupData(req);
         // hash the password
         const hashedPassword = await bcrypt.hash(req.body.password, 10)
-        // console.log("hashed password:", hashedPassword);
 
-        const user = new User({ ...userObj, password: hashedPassword });
+
+        const cloudinaryResult = await uploadOnCloudinary(userImage?.path);
+
+
+        const user = new User({ ...userObj, password: hashedPassword, profileUrl: cloudinaryResult?.secure_url || "" });
         await user.save();
         await user.getJWT().then((token) => {
             res.cookie("token", token)

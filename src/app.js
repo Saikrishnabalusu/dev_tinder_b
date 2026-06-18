@@ -1,3 +1,4 @@
+require('dotenv').config()
 const express = require("express")
 const cookieParser = require("cookie-parser")
 const { connectDB } = require("./config/database.js");
@@ -12,7 +13,6 @@ const { initializeSocket } = require("./utils/socket.js");
 const { chatRoute } = require("./routes/chatRoute.js");
 
 
-require('dotenv').config()
 const app = express();
 const server = http.createServer(app)
 app.use(express.json()) // to parse the incoming request body in json format and make it available in req.body
